@@ -189,3 +189,4 @@ bash scripts/deploy_cf.sh \
 
 **依赖的 skill**（由 Step 4 加载）：
 - `/impeccable` — 前端 UI 设计，负责 HTML 的视觉渲染和主题化
+  - 如果本地没有 `impeccable` skill，运行 `/find-skills impeccable` 搜索并安装
