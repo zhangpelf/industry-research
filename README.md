@@ -69,6 +69,18 @@ wrangler login
 git clone https://github.com/zhangpelf/industry-research.git ~/.claude/skills/industry-research
 ```
 
+## 依赖 Skills
+
+本 skill 依赖以下外部 skill，使用前请确保已安装：
+
+| Skill | 用途 | 安装方式 |
+|-------|------|---------|
+| `impeccable` | HTML 视觉渲染（投行风格主题） | `/find-skills impeccable` |
+| `websearch` | 网络搜索研报（内置，无需安装） | — |
+| `anysearch` | 网络搜索研报（可选，需安装） | `/find-skills anysearch` |
+
+> 💡 如果本地没有 `impeccable`，运行 `/find-skills impeccable` 搜索并安装。
+
 ## 文件结构
 
 ```
@@ -76,7 +88,6 @@ industry-research/
 ├── README.md              ← 你在这里
 ├── SKILL.md               ← Skill 主文件（流程定义）
 └── scripts/
-    ├── render_report.py   ← Markdown → HTML 渲染器（暖棕+金色投行主题）
     └── deploy_cf.sh       ← Cloudflare Pages 一键部署脚本
 ```
 
@@ -116,7 +127,7 @@ bash scripts/deploy_cf.sh xinnengyuan-auto ./新能源汽车/
 修改 `SKILL.md` 可以：
 - 调整搜索关键词策略
 - 修改报告结构和章节
-- 更换 HTML 主题配色（在 `render_report.py` 中修改）
+- 更换 HTML 主题配色（修改 Step 4 的设计系统要求）
 - 添加新的分析维度
 
 ## License
