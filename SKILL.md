@@ -30,6 +30,8 @@ Cloudflare Pages 公开网页
 
 用 `websearch` 或 `anysearch` skill 搜索目标行业的公开研报。
 
+> 如果本地已有行业资料（之前下载的报告、笔记、历史研报等），也允许通过 `Grep`/`Glob`/`Read` 从本地文件补充检索。不局限于纯 web 搜索。
+
 **搜索策略**：
 - 搜 5-10 篇高质量研报（券商年度策略、行业深度、公司深度）
 - 关键词组合：`"<行业> 2026 策略"`, `"<行业> 深度研究"`, `"<行业> 投资机会"`
@@ -121,16 +123,17 @@ Cloudflare Pages 公开网页
 
 ## Step 4: 渲染 HTML
 
-运行渲染脚本，将 Markdown 转为单文件 HTML：
+加载 `impeccable` skill，将 Markdown 报告渲染为单文件 HTML。
 
-```bash
-python3 ~/.claude/skills/research-report/scripts/render_report.py \
-  --input "<行业>产业投资全景报告.md" \
-  --output "<行业>产业投资全景报告.html" \
-  --title "<行业>产业投资全景报告 | 2026"
+> 不要用硬编码的脚本（如 `render_report.py`）生成 HTML——应该用 `impeccable` skill 来完成视觉设计和 HTML 输出。
+
+```markdown
+1. 加载 `/impeccable` skill
+2. 传入设计系统要求（暖棕+金色投行风格）和 Markdown 源文件
+3. 输出单文件 HTML，包含所有样式内联
 ```
 
-**设计系统**：
+**设计系统要求**（传递给 `impeccable` 的参数）：
 - 色调：暖棕+金色（投行风格）
 - 布局：Hero大标题 + 卡片式内容 + 响应式
 - 特性：社交分享OG标签、移动端适配、打印友好
@@ -138,7 +141,7 @@ python3 ~/.claude/skills/research-report/scripts/render_report.py \
 ## Step 5: 部署到 Cloudflare Pages（可选）
 
 ```bash
-bash ~/.claude/skills/research-report/scripts/deploy_cf.sh \
+bash scripts/deploy_cf.sh \
   <项目名> \
   "<HTML文件所在目录>"
 ```
@@ -164,27 +167,25 @@ cd ~/Library/Mobile\ Documents/com~apple~CloudDocs/my\ all\ memory/度量衡/研
 # 3. 撰写核心报告
 # 输出：新能源汽车/新能源汽车产业投资全景报告.md
 
-# 4. 渲染 HTML
-python3 ~/.claude/skills/research-report/scripts/render_report.py \
-  --input "新能源汽车/新能源汽车产业投资全景报告.md" \
-  --output "新能源汽车/新能源汽车产业投资全景报告.html" \
-  --title "新能源汽车产业投资全景报告 | 2026"
+# 4. 渲染 HTML（加载 impeccable skill，指定暖棕+金色投行风格）
+#    输入：新能源汽车/新能源汽车产业投资全景报告.md
+#    输出：新能源汽车/新能源汽车产业投资全景报告.html
 
 # 5. 部署
-bash ~/.claude/skills/research-report/scripts/deploy_cf.sh \
+bash scripts/deploy_cf.sh \
   xinnengyuan-auto \
   "新能源汽车/"
 # → https://xinnengyuan-auto.pages.dev
 ```
 
-## 文件结构
+## 相关文件
 
 ```
-~/.claude/skills/research-report/
+~/.claude/skills/industry-research/
 ├── SKILL.md                    # 本文件
-├── scripts/
-│   ├── render_report.py        # Markdown → HTML 渲染
-│   └── deploy_cf.sh            # Cloudflare Pages 部署
-└── templates/
-    └── report.html             # HTML 模板（被 render_report.py 引用）
+└── scripts/
+    └── deploy_cf.sh            # Cloudflare Pages 部署
 ```
+
+**依赖的 skill**（由 Step 4 加载）：
+- `/impeccable` — 前端 UI 设计，负责 HTML 的视觉渲染和主题化
