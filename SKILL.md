@@ -154,6 +154,8 @@ flowchart LR
 
 > 如果源文件已有 ASCII 字符画，建议先在 Step 3 中手动或借助 AI 转换为 Mermaid 语法（参考上表对照），再进行 Step 4 渲染。转换后可获得真正的 SVG 矢量流程图。
 
+> **视觉一致性检查**：渲染后若流程图/架构图与页面其他区域风格不一致（如白底突兀、无圆角边框），说明 `industry-report` 模板的 `.mermaid` 样式未生效。用最新版 `render-html` 重新渲染即可修复。
+
 ## Step 4: 渲染 HTML
 
 使用 `render-html` skill 的 `industry-report` 模板，将 Markdown 报告渲染为单文件 HTML。
