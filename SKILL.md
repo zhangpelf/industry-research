@@ -121,22 +121,65 @@ Cloudflare Pages 公开网页
 
 **输出文件**：`<行业>产业投资全景报告.md`
 
-## Step 4: 渲染 HTML
+### 图表策略：用 Mermaid 替代 ASCII 字符画
 
-加载 `impeccable` skill，将 Markdown 报告渲染为单文件 HTML。
+所有流程图、架构图、时间线、树形结构，必须使用 **Mermaid 语法**（` ```mermaid `），不要用无标注的 code fence 画 ASCII 框线图。
 
-> 不要用硬编码的脚本（如 `render_report.py`）生成 HTML——应该用 `impeccable` skill 来完成视觉设计和 HTML 输出。
+**原因**：`render-html` 对 ` ```mermaid ` 代码块渲染为 Mermaid.js SVG 矢量图（客户端渲染，可缩放、可复制），而对无标注的 ` ``` ` 只渲染为静态文本块。
+
+**适用场景对照**：
+
+| 原 ASCII 图类型 | Mermaid 替代 | 效果 |
+|---|---|---|
+| 层叠方框（三层技术栈等） | `flowchart TB` + subgraphs | 矢量框+箭头，子图分组 |
+| 时间线（年份里程碑） | `timeline` | 原生时间线组件 |
+| 三列流转（产业链上下游） | `flowchart LR` | 多列子图，自动布局 |
+| 树形/梯队（IPO、组织层级） | `graph TD` | 树形展开 |
+| 中心辐射（企业图谱） | `graph BT` / `graph TD` | 多方向汇聚 |
+
+**写法示例**（参见本文 Step 4 渲染结果中的 Mermaid 图效果）：
 
 ```markdown
-1. 加载 `/impeccable` skill
-2. 传入设计系统要求（暖棕+金色投行风格）和 Markdown 源文件
-3. 输出单文件 HTML，包含所有样式内联
+```mermaid
+flowchart LR
+    subgraph 上游
+        A1[执行器]
+    end
+    subgraph 下游
+        B1[工业制造]
+    end
+    上游 --> 下游
+```
 ```
 
-**设计系统要求**（传递给 `impeccable` 的参数）：
-- 色调：暖棕+金色（投行风格）
-- 布局：Hero大标题 + 卡片式内容 + 响应式
-- 特性：社交分享OG标签、移动端适配、打印友好
+> 如果源文件已有 ASCII 字符画，建议先在 Step 3 中手动或借助 AI 转换为 Mermaid 语法（参考上表对照），再进行 Step 4 渲染。转换后可获得真正的 SVG 矢量流程图。
+
+## Step 4: 渲染 HTML
+
+使用 `render-html` skill 的 `industry-report` 模板，将 Markdown 报告渲染为单文件 HTML。
+
+> 不要用硬编码的脚本（如 `render_report.py`）生成 HTML——应该用 `render-html` skill 的 `industry-report` 模板来完成渲染。该模板内置了暖棕+金色投行风格，无需额外设计参数。
+
+```bash
+# 找到 render_html.py 路径
+RENDER_HTML="$CLAUDE_SKILL_DIR/scripts/render_html.py"
+if [ ! -f "$RENDER_HTML" ]; then
+  RENDER_HTML="~/.claude/skills/render-html/scripts/render_html.py"
+fi
+
+# 渲染 HTML
+python3 "$RENDER_HTML" "行业报告.md" \
+  --template industry-report \
+  --out "行业报告.html" \
+  --title "产业投资全景报告 | 2026" \
+  --eyebrow "行业研报"
+```
+
+**模板特性**（`industry-report` 内置）：
+- 色调：暖棕+金色（投行风格），深色 Hero 标题栏
+- 布局：粘性侧边目录 + Hero大标题 + 卡片式内容区 + 响应式
+- 特性：深色模式自动适配、移动端适配、打印友好
+- 效果：专业投行研究报告风，适合正式阅读和分享
 
 ## Step 5: 部署到 Cloudflare Pages（可选）
 
@@ -167,7 +210,7 @@ cd ~/Library/Mobile\ Documents/com~apple~CloudDocs/my\ all\ memory/度量衡/研
 # 3. 撰写核心报告
 # 输出：新能源汽车/新能源汽车产业投资全景报告.md
 
-# 4. 渲染 HTML（加载 impeccable skill，指定暖棕+金色投行风格）
+# 4. 渲染 HTML（使用 render-html industry-report 模板，内置暖棕+金色投行风格）
 #    输入：新能源汽车/新能源汽车产业投资全景报告.md
 #    输出：新能源汽车/新能源汽车产业投资全景报告.html
 
@@ -188,5 +231,5 @@ bash scripts/deploy_cf.sh \
 ```
 
 **依赖的 skill**（由 Step 4 加载）：
-- `/impeccable` — 前端 UI 设计，负责 HTML 的视觉渲染和主题化
-  - 如果本地没有 `impeccable` skill，运行 `/find-skills impeccable` 搜索并安装
+- `/render-html` — Markdown → 单文件 HTML 渲染器，`industry-report` 模板提供暖棕+金色投行风格
+  - 如果本地没有 `render-html` skill，运行 `/find-skills render-html` 搜索并安装

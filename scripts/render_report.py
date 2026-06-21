@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+DEPRECATED: Use render-html's industry-report template instead.
+
+This script is kept for backward compatibility but will be removed in a
+future update. To render industry research reports:
+
+    RENDER_HTML="$CLAUDE_SKILL_DIR/scripts/render_html.py"
+    [ -f "$RENDER_HTML" ] || RENDER_HTML="$HOME/.claude/skills/render-html/scripts/render_html.py"
+    python3 "$RENDER_HTML" "report.md" --template industry-report --out "report.html"
+
+The render-html pipeline produces the same 暖棕+金色 style with better
+maintainability, cross-model review, and a unified codebase.
+
 研报 Markdown → 单文件 HTML 渲染器
 用法: python3 render_report.py --input report.md --output report.html --title "标题"
 """
@@ -19,21 +31,23 @@ def md_to_html(md_text: str) -> str:
     in_code = False
     in_list = False
     list_type = ""
+    code_lang = ""
+    code_lines: list[str] = []
 
     for line in lines:
         stripped = line.strip()
 
         if stripped.startswith("```"):
             if in_code:
-                html_parts.append("</code></pre>")
+                _render_code_block(html_parts, code_lang, code_lines)
                 in_code = False
             else:
-                lang = stripped[3:].strip()
-                html_parts.append(f'<pre><code class="lang-{lang}">')
+                code_lang = stripped[3:].strip()
+                code_lines = []
                 in_code = True
             continue
         if in_code:
-            html_parts.append(line.replace("<", "&lt;").replace(">", "&gt;"))
+            code_lines.append(line)
             continue
 
         if not stripped:
@@ -120,6 +134,37 @@ def inline(text: str) -> str:
     text = re.sub(r"`(.+?)`", r"<code>\1</code>", text)
     text = re.sub(r"\[(.+?)\]\((.+?)\)", r'<a href="\2">\1</a>', text)
     return text
+
+
+def _is_diagram(lines: list[str]) -> bool:
+    """检测代码块内容是否为 ASCII 框线图。"""
+    if not lines:
+        return False
+    ascii_box = 0
+    box_chars = set("─│┌┐└┘├┤┬┴┼┃┏┓┗┛┣┫┻┳╋╰╯╮╭╲╱═║╔╗╚╝╠╣╦╩╬╒╓╕╖╘╙╛╜╞╟╡╢╤╥╧╨╪╫▄▀▐▌■□▲△▼▽●○◆◇")
+    for line in lines:
+        if any(c in box_chars for c in line):
+            ascii_box += 1
+    return ascii_box >= 2
+
+
+def _render_code_block(html_parts: list[str], lang: str, lines: list[str]) -> None:
+    """按类型渲染代码块：mermaid / 框线图 / 普通代码。"""
+    if lang == "mermaid":
+        html_parts.append('<div class="mermaid">')
+        html_parts.append("\n".join(lines))  # Mermaid.js 需要原始内容
+        html_parts.append("</div>")
+    elif _is_diagram(lines):
+        html_parts.append('<pre class="diagram"><code>')
+        for cl in lines:
+            html_parts.append(cl.replace("<", "&lt;").replace(">", "&gt;"))
+        html_parts.append("</code></pre>")
+    else:
+        cls = f' class="lang-{lang}"' if lang else ""
+        html_parts.append(f"<pre><code{cls}>")
+        for cl in lines:
+            html_parts.append(cl.replace("<", "&lt;").replace(">", "&gt;"))
+        html_parts.append("</code></pre>")
 
 
 def build_html(title: str, body_html: str, source_path: str) -> str:
@@ -209,6 +254,9 @@ def build_html(title: str, body_html: str, source_path: str) -> str:
   }}
   pre {{ background: #1a1f2e; color: #e2e8f0; padding: 20px; border-radius: 8px; overflow-x: auto; margin: 20px 0; }}
   pre code {{ background: none; padding: 0; color: inherit; }}
+  pre.diagram {{ background: #f8f6f0; border: 1px solid var(--border); color: var(--text); font-size: 13px; line-height: 1.4; }}
+  pre.diagram code {{ background: none; padding: 0; color: inherit; display: block; white-space: pre; }}
+  .mermaid {{ margin: 24px 0; text-align: center; }}
   ul, ol {{ margin: 12px 0 12px 24px; }}
   li {{ margin: 6px 0; }}
   hr {{ border: none; border-top: 1px solid var(--border); margin: 32px 0; }}
@@ -226,6 +274,8 @@ def build_html(title: str, body_html: str, source_path: str) -> str:
     table {{ page-break-inside: avoid; }}
   }}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({{startOnLoad:true,theme:"neutral"}});</script>
 </head>
 <body>
 
