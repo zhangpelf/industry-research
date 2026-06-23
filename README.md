@@ -5,7 +5,7 @@
 > 从"帮我查查"到"链接发你"，全程 5 分钟，零人工介入。
 
 ---
-尝鲜：[https://summit-delivers-pharmacies-viking.trycloudflare.com/](https://industry-research-szdr2v9eavarwd8fhj3oxu.streamlit.app/)
+免费尝试：https://industry-research-szdr2v9eavarwd8fhj3oxu.streamlit.app/
 ## 它能干嘛？
 
 你说一句"帮我研究新能源汽车"，它就自己去：
